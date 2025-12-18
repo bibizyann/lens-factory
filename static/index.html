@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lens Factory Control</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-body: #f4f6f9;
+            --bg-card: #ffffff;
+            --text-main: #333333;
+            --text-muted: #6c757d;
+            --accent-primary: #4e73df;
+            --accent-success: #1cc88a;
+            --accent-warning: #f6c23e;
+            --accent-info: #36b9cc;
+            --border-color: #e3e6f0;
+            --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #1a1a2e;
+            --bg-card: #16213e;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --accent-primary: #375a7f;
+            --accent-success: #00bc8c;
+            --accent-warning: #f39c12;
+            --accent-info: #3498db;
+            --border-color: #2c3e50;
+            --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .navbar {
+            background-color: var(--bg-card);
+            box-shadow: var(--shadow);
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 24px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-box {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .form-control, .form-select {
+            background-color: var(--bg-body);
+            border-color: var(--border-color);
+            color: var(--text-main);
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+        }
+
+        /* Анимация появления */
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Стилизация таблицы */
+        .table { color: var(--text-main); }
+        .table thead th {
+            background-color: var(--bg-body);
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--border-color);
+        }
+        .table td { border-color: var(--border-color); }
+
+        /* Theme Toggle */
+        .theme-switch {
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="#">
+            <i class="fa-solid fa-glasses text-primary me-2"></i>LensManager
+        </a>
+        <div class="d-flex align-items-center">
+            <span class="me-2 small text-muted">Оператор БД</span>
+            <div class="theme-switch" onclick="toggleTheme()">
+                <i class="fa-solid fa-moon" id="themeIcon"></i>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+    
+    <div class="row">
+        
+        <div class="col-12 fade-in-up" style="animation-delay: 0.1s;">
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon-box" style="background-color: var(--accent-primary);">
+                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                    </div>
+                    Журнал отказов оборудования
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted small align-self-center">История поломок и ремонтов</span>
+                        <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="loadFailures()">
+                            <i class="fa-solid fa-sync-alt me-1"></i> Обновить
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Оборудование</th>
+                                    <th>Процесс</th>
+                                    <th>Причина</th>
+                                    <th>Дата поломки</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody id="failuresTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 fade-in-up" style="animation-delay: 0.2s;">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div class="icon-box" style="background-color: var(--accent-success);">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
+                    Запуск новой партии
+                </div>
+                <div class="card-body">
+                    <form id="orderForm">
+                        <div class="mb-3">
+                            <label class="form-label small text-muted text-uppercase fw-bold">Параметры Линзы</label>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text"><i class="fa-solid fa-tag"></i></span>
+                                <input type="text" class="form-control" id="lensName" value="SoftVision Daily">
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-3"><input type="number" class="form-control" title="Опт. сила" placeholder="Pwr" id="optPower" step="0.1" value="-2.5"></div>
+                                <div class="col-3"><input type="number" class="form-control" title="Кривизна" placeholder="BC" id="baseCurve" step="0.1" value="8.6"></div>
+                                <div class="col-3"><input type="number" class="form-control" title="Диаметр" placeholder="Dia" id="diameter" step="0.1" value="14.2"></div>
+                                <div class="col-3"><input type="number" class="form-control" title="Толщина" placeholder="Thk" id="thickness" step="0.01" value="0.08"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small text-muted text-uppercase fw-bold">Оборудование и Настройки</label>
+                            <select class="form-select mb-2" id="equipID">
+                                <option disabled selected>Загрузка...</option>
+                            </select>
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">Speed</span>
+                                        <input type="number" class="form-control" id="speed" value="80">
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">Press</span>
+                                        <input type="number" class="form-control" id="pressure" value="10">
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">Temp</span>
+                                        <input type="number" class="form-control" id="temp" value="25">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-success w-100 rounded-pill" onclick="submitOrder()">
+                            Проверить и Запустить
+                        </button>
+                    </form>
+                    <div id="orderResult" class="alert mt-3 d-none shadow-sm"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 fade-in-up" style="animation-delay: 0.3s;">
+            <div class="card h-100">
+                <div class="card-header">
+                    <div class="icon-box" style="background-color: var(--accent-warning);">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    Анализ брака
+                </div>
+                <div class="card-body">
+                    <label class="form-label small text-muted text-uppercase fw-bold">Выбор партии</label>
+                    <select class="form-select mb-3" id="defectProductId">
+                        <option disabled selected>Загрузка...</option>
+                    </select>
+
+                    <label class="form-label small text-muted text-uppercase fw-bold">Количество дефектов</label>
+                    <div class="input-group mb-4">
+                        <input type="number" class="form-control" id="defectCount" placeholder="Введите число">
+                        <button class="btn btn-warning text-white" onclick="analyzeDefects()">
+                            <i class="fa-solid fa-chart-line"></i> Анализ
+                        </button>
+                    </div>
+
+                    <div id="defectResult" class="d-none animate__animated animate__fadeIn">
+                        <div class="p-3 rounded border-start border-4 border-danger bg-opacity-10" style="background-color: rgba(220, 53, 69, 0.05);">
+                            <h6 class="text-danger fw-bold"><i class="fa-solid fa-bug me-2"></i>Диагностика системы:</h6>
+                            <p id="defectText" class="mb-1 small text-secondary" style="white-space: pre-wrap;"></p>
+                        </div>
+                        <div id="materialHint" class="mt-2 text-center d-none">
+                            <span class="badge bg-info text-dark fw-normal"><i class="fa-solid fa-lightbulb"></i> Совет: замените исходный материал, если брак не снижается.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 mt-4 fade-in-up" style="animation-delay: 0.4s;">
+            <div class="card border-0" style="background: linear-gradient(45deg, var(--accent-info), #2c9faf); color: white;">
+                <div class="card-body d-flex flex-column flex-md-row align-items-center justify-content-between">
+                    <div class="mb-3 mb-md-0">
+                        <h5 class="fw-bold"><i class="fa-solid fa-gem me-2"></i>Контроль Полировки и Шлифовки</h5>
+                        <p class="mb-0 opacity-75 small">Проверка фиксации линз и точности шлифовки (Оборудование ID 7)</p>
+                    </div>
+                    <button class="btn btn-light text-info fw-bold rounded-pill px-4" onclick="checkPolishing()">
+                        Запустить проверку
+                    </button>
+                </div>
+                <div id="polishResult" class="bg-white text-dark p-3 m-3 rounded shadow-sm d-none"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // --- Theme Logic ---
+    function toggleTheme() {
+        const html = document.documentElement;
+        const icon = document.getElementById('themeIcon');
+        const current = html.getAttribute('data-theme');
+        
+        if (current === 'light') {
+            html.setAttribute('data-theme', 'dark');
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            html.setAttribute('data-theme', 'light');
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+            localStorage.setItem('theme', 'light');
+        }
+    }
+
+    // Load saved theme
+    if(localStorage.getItem('theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('themeIcon').classList.replace('fa-moon', 'fa-sun');
+    }
+
+    // --- Data Logic (Same as before, simplified UI calls) ---
+    async function loadOptions() {
+        try {
+            const res = await fetch('/api/options');
+            const data = await res.json();
+            
+            const prodSelect = document.getElementById('defectProductId');
+            prodSelect.innerHTML = '';
+            data.products.forEach(p => {
+                prodSelect.innerHTML += `<option value="${p.id}">${p.label}</option>`;
+            });
+
+            const equipSelect = document.getElementById('equipID');
+            equipSelect.innerHTML = '';
+            data.equipment.forEach(e => {
+                const sel = e.id === 4 ? 'selected' : '';
+                equipSelect.innerHTML += `<option value="${e.id}" ${sel}>${e.label}</option>`;
+            });
+        } catch(e) { console.error(e); }
+    }
+
+    async function loadFailures() {
+        const res = await fetch('/api/failures');
+        const data = await res.json();
+        const tbody = document.getElementById('failuresTable');
+        tbody.innerHTML = '';
+        data.forEach(f => {
+            const date = f.failure_date.split('T')[0];
+            const restore = f.restore_date ? `<span class="text-success"><i class="fa-solid fa-check-circle"></i> ${f.restore_date.split('T')[0]}</span>` : '<span class="badge bg-danger">В ремонте</span>';
+            tbody.innerHTML += `<tr>
+                <td class="fw-bold">${f.equipment}</td>
+                <td class="text-muted small">${f.process}</td>
+                <td class="text-danger small"><i class="fa-solid fa-triangle-exclamation"></i> ${f.reason}</td>
+                <td class="small">${date}</td>
+                <td class="small">${restore}</td>
+            </tr>`;
+        });
+    }
+
+    async function submitOrder() {
+        const payload = {
+            lensName: document.getElementById('lensName').value,
+            optPower: parseFloat(document.getElementById('optPower').value),
+            baseCurve: parseFloat(document.getElementById('baseCurve').value),
+            diameter: parseFloat(document.getElementById('diameter').value),
+            thickness: parseFloat(document.getElementById('thickness').value),
+            equipID: parseInt(document.getElementById('equipID').value),
+            speed: parseFloat(document.getElementById('speed').value),
+            pressure: parseFloat(document.getElementById('pressure').value),
+            temperature: parseFloat(document.getElementById('temp').value),
+        };
+
+        const res = await fetch('/api/order', { method: 'POST', body: JSON.stringify(payload) });
+        const data = await res.json();
+        
+        const div = document.getElementById('orderResult');
+        div.classList.remove('d-none', 'alert-success', 'alert-danger');
+        
+        if (data.status === 'success') {
+            div.classList.add('alert-success');
+            div.innerHTML = `<i class="fa-solid fa-check-circle me-2"></i><strong>Партия запущена!</strong><br><small>${data.message}</small><br>Прогноз: <strong>${data.predicted_output} шт.</strong>`;
+        } else {
+            div.classList.add('alert-danger');
+            div.innerHTML = `<i class="fa-solid fa-times-circle me-2"></i>${data.message}`;
+        }
+    }
+
+    async function analyzeDefects() {
+        const pid = parseInt(document.getElementById('defectProductId').value);
+        const val = parseInt(document.getElementById('defectCount').value);
+        if (!pid) return;
+
+        const res = await fetch('/api/defects', { method: 'POST', body: JSON.stringify({ product_id: pid, new_value: val }) });
+        const data = await res.json();
+        
+        const resDiv = document.getElementById('defectResult');
+        const txt = document.getElementById('defectText');
+        const hint = document.getElementById('materialHint');
+        
+        resDiv.classList.remove('d-none');
+        txt.innerText = data.recommendation; // Теперь сюда приходит красивый текст из Go
+        
+        if (data.action_required) hint.classList.remove('d-none');
+        else hint.classList.add('d-none');
+    }
+
+    async function checkPolishing() {
+        const res = await fetch('/api/polishing');
+        const data = await res.json();
+        
+        const div = document.getElementById('polishResult');
+        div.classList.remove('d-none');
+        
+        if (data.critical) {
+            div.className = "alert alert-warning m-3 shadow-sm";
+            div.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-2"></i><strong>Проблема:</strong> ${data.status}`;
+        } else {
+            div.className = "alert alert-success m-3 shadow-sm";
+            div.innerHTML = `<i class="fa-solid fa-check-circle me-2"></i>${data.status}`;
+        }
+    }
+
+    // Init
+    loadOptions();
+    loadFailures();
+</script>
+
+</body>
+</html>
